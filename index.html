@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador LaTeX académico</title>
+<style>
+:root{--bg:#f1f3f2;--cd:#fff;--ink:#1b1f1d;--mu:#5d6762;--ln:#d6dbd8;--ac:#17604a;--ax:#fff;--er:#b0392b}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#151918;--cd:#1f2523;--ink:#eaeeec;--mu:#97a29d;--ln:#353d3a;--ac:#3aa583;--ax:#08140f;--er:#ef8a7c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:680px;margin:0 auto;padding:16px 14px 48px}h1{font-size:1.3rem;margin:0 0 10px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}
+button{font:inherit;font-size:.9rem;border:1px solid var(--ln);background:var(--cd);color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+button.on,button.p{background:var(--ac);color:var(--ax);border-color:var(--ac);font-weight:600}
+.box{background:var(--cd);border:1px solid var(--ln);border-radius:10px;padding:12px;margin-bottom:12px}
+label{display:block;font-size:.85rem;color:var(--mu);margin:10px 0 3px}label:first-child{margin-top:0}
+input,select,textarea{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--ink)}
+textarea{min-height:120px;resize:vertical}input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:460px){.g{grid-template-columns:1fr}}
+.r{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.mu{color:var(--mu);font-size:.82rem;margin:6px 0 0}
+.it{border:1px solid var(--ln);border-radius:8px;padding:8px;margin-top:8px;font-size:.88rem;overflow-wrap:anywhere}
+.pv{background:#fff;color:#000;border:1px solid var(--ln);border-radius:6px;padding:18px;font:14px/1.9 "Times New Roman",Georgia,serif;overflow-x:auto}
+.pv h2{font-size:1em;text-align:center;margin:14px 0 0}.pv h3{font-size:1em;margin:10px 0 0}.pv h4{font-size:1em;font-style:italic;margin:8px 0 0}
+.pv p{margin:0;text-indent:2em}.pv .c{text-align:center;text-indent:0}.pv .eq{text-align:center;text-indent:0;overflow-x:auto}
+.pv figure{margin:8px 0;text-align:center}.pv figure img{max-width:100%}.pv .ref{text-indent:-2em;padding-left:2em}
+.pv svg{max-width:none;vertical-align:middle}pre{white-space:pre-wrap;font:.8rem ui-monospace,Menlo,monospace;background:var(--bg);padding:8px;border-radius:8px;max-height:260px;overflow:auto}
+.pv .sl{border:1px solid #888;border-radius:4px;margin:12px 0;line-height:1.5;font-family:Arial,sans-serif}.pv .sl h2{background:#1f4e79;color:#fff;margin:0;padding:6px;text-align:left}.pv .sl .sb{padding:10px}.pv .sl p{text-indent:0}
+.pv .bx{border:1px solid #1f4e79;border-radius:4px;margin:8px 0;line-height:1.5}.pv .bx b{display:block;background:#1f4e79;color:#fff;padding:2px 8px}.pv .bx div{padding:6px 8px}
+.pv .fl{float:right;width:38%;margin:0 0 6px 12px}.pv .fl.l{float:left;margin:0 12px 6px 0}.pv ul{margin:4px 0}
+[hidden]{display:none!important}
+</style></head><body><main>
+<h1>Generador LaTeX académico</h1>
+<div class="tabs" id="tabs"></div>
+
+<section id="s-datos" class="box">
+<div class="g"><div><label>Tipo de documento</label><select id="tipo"><option value="paper">Paper</option><option value="didactico">Texto didáctico</option><option value="beamer">Beamer (diapositivas)</option></select></div><div><label>Estilo de citas</label><select id="estilo"><option value="apa">APA 7</option><option value="chicago">Chicago (autor-fecha)</option></select></div></div>
+<div id="tmw"><label>Tema Beamer</label><select id="tema"><option>Madrid</option><option>Berlin</option><option>Warsaw</option><option>CambridgeUS</option><option>Singapore</option></select></div>
+<label>Título</label><input id="titulo"><label>Título corto (encabezado)</label><input id="corto">
+<label>Autores (uno por línea)</label><textarea id="autores" style="min-height:70px"></textarea>
+<div class="g"><div><label>Universidad</label><input id="univ" value="Universidad de Panamá"></div><div><label>Facultad</label><input id="facu" value="Facultad de Ingeniería"></div>
+<div><label>Curso</label><input id="curso"></div><div><label>Docente</label><input id="doc"></div></div>
+<label>Fecha de entrega</label><input type="date" id="fecha">
+<label>Resumen</label><textarea id="resumen"></textarea><label>Palabras clave (separadas por comas)</label><input id="claves">
+<p class="mu">Todo se guarda solo en este navegador.</p></section>
+
+<section id="s-texto" hidden>
+<div class="box"><div id="secs"></div><div class="r"><button id="addSec">+ Sección</button></div>
+<p class="mu">Párrafos separados por línea en blanco. <b>## Texto</b> subtítulo · <b>*cursiva*</b> · <b>[@clave]</b> cita entre paréntesis · <b>[@@clave]</b> cita narrativa · <b>{{x^2}}</b> fórmula en la línea · <b>- texto</b> viñetas (una por línea) · <b>!!ejemplo: texto</b> recuadro (definicion, ejemplo, importante, nota) · imagen al costado: <b>[img:foto.png|Pie|izq]</b> o <b>|der</b> (texto didáctico). En Beamer cada sección es una diapositiva.</p></div>
+<div class="box"><label>Fórmula (texto normal o LaTeX)</label><input id="fx" value="((Wr)+S)/t1-t2=resultado">
+<div id="fxv" style="overflow-x:auto;text-align:center;padding:8px 0"></div><p class="mu" id="fxe"></p>
+<div class="r"><button id="fxi">Insertar como ecuación</button></div></div>
+<div class="box"><label>Imágenes (se incluyen en el .zip)</label><input type="file" id="imgs" accept="image/*" multiple>
+<div id="imgl"></div><label>Pie de figura</label><input id="cap"><label>Posición (texto didáctico)</label><select id="imside"><option value="">Centrada</option><option>izq</option><option>der</option></select><div class="r"><button id="imi">Insertar imagen elegida</button></div>
+<select id="imsel" style="margin-top:8px"></select></div></section>
+
+<section id="s-fuentes" hidden><div class="box">
+<label>Tipo</label><select id="rt"><option value="libro">Libro</option><option value="articulo">Artículo de revista</option><option value="capitulo">Capítulo de libro</option><option value="web">Página web</option></select>
+<label>Autores (Apellido, Nombre — uno por línea)</label><textarea id="ra" style="min-height:64px"></textarea>
+<div class="g"><div><label>Año</label><input id="ry"></div><div><label>Título</label><input id="rtt"></div></div>
+<div data-c="articulo capitulo web"><label id="rjl">Revista</label><input id="rj"></div>
+<div class="g" data-c="articulo"><div><label>Volumen</label><input id="rv"></div><div><label>Número</label><input id="rn"></div></div>
+<div data-c="articulo capitulo"><label>Páginas</label><input id="rp" placeholder="45-67"></div>
+<div data-c="capitulo"><label>Editores (Apellido, Nombre — uno por línea)</label><textarea id="re" style="min-height:50px"></textarea></div>
+<div data-c="libro capitulo"><label>Editorial</label><input id="rb"></div>
+<div><label>DOI o enlace (opcional)</label><input id="ru"></div>
+<div class="r"><button class="p" id="radd">Agregar referencia</button></div></div>
+<div id="rl"></div></section>
+
+<section id="s-vista" hidden><div class="pv" id="pv"></div></section>
+
+<section id="s-export" hidden><div class="box">
+<div class="r"><button class="p" id="zipb">Descargar .zip (tex + bib + imágenes)</button><button id="cpt">Copiar .tex</button><button id="cpb">Copiar .bib</button></div>
+<p class="mu" id="xm">Compila con Overleaf, o en tu computadora con MiKTeX / TeX Live usando <b>pdflatex</b> + <b>biber</b>.</p></div>
+<div class="box"><label>main.tex</label><pre id="tx"></pre><label>referencias.bib</label><pre id="bb"></pre></div></section>
+</main>
+
+<script>
+var $=function(i){return document.getElementById(i)};
+/* ===== Dibujo de fórmulas (sin librerías) ===== */
+var FF="Georgia,'Times New Roman',serif",cx=document.createElement('canvas').getContext('2d');
+var GK={alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',theta:'θ',lambda:'λ',mu:'μ',pi:'π',rho:'ρ',sigma:'σ',tau:'τ',phi:'φ',omega:'ω',Delta:'Δ',Gamma:'Γ',Theta:'Θ',Lambda:'Λ',Sigma:'Σ',Phi:'Φ',Omega:'Ω'},FUNCS={sin:1,cos:1,tan:1,log:1,ln:1,exp:1};
+var REL={'=':['=','='],'<':['<','<'],'>':['>','>'],'<=':['\\leq','≤'],'>=':['\\geq','≥'],'!=':['\\neq','≠']};
+function X(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function Txt(s,it){return function(fs){cx.font=(it?'italic ':'')+fs+'px '+FF;return{w:cx.measureText(s).width,a:.72*fs,d:.22*fs,dr:function(x,y){return '<text x="'+x+'" y="'+y+'" font-size="'+fs+'"'+(it?' font-style="italic"':'')+'>'+X(s)+'</text>'}}}}
+function Sp(k){return function(fs){return{w:k*fs,a:0,d:0,dr:function(){return ''}}}}
+function Row(l){return function(fs){var b=l.map(function(f){return f(fs)}),w=0,a=0,d=0;b.forEach(function(q){w+=q.w;a=Math.max(a,q.a);d=Math.max(d,q.d)});return{w:w,a:a,d:d,dr:function(x,y){var o='';b.forEach(function(q){o+=q.dr(x,y);x+=q.w});return o}}}}
+function Frac(n,m){return function(fs){var N=n(fs),M=m(fs),g=.12*fs,ax=.28*fs,w=Math.max(N.w,M.w)+.3*fs;return{w:w,a:ax+g+N.d+N.a,d:g+M.a+M.d-ax,dr:function(x,y){return '<line x1="'+(x+.08*fs)+'" x2="'+(x+w-.08*fs)+'" y1="'+(y-ax)+'" y2="'+(y-ax)+'" stroke="currentColor" stroke-width="'+.06*fs+'"/>'+N.dr(x+(w-N.w)/2,y-ax-g-N.d)+M.dr(x+(w-M.w)/2,y-ax+g+M.a)}}}}
+function Sup(b0,e0){return function(fs){var b=b0(fs),e=e0(fs*.7),r=Math.max(.36*fs,b.a*.55);return{w:b.w+e.w,a:Math.max(b.a,r+e.a),d:b.d,dr:function(x,y){return b.dr(x,y)+e.dr(x+b.w,y-r)}}}}
+function Sub(b0,e0){return function(fs){var b=b0(fs),e=e0(fs*.7),p=.22*fs;return{w:b.w+e.w,a:b.a,d:Math.max(b.d,p+e.d),dr:function(x,y){return b.dr(x,y)+e.dr(x+b.w,y+p)}}}}
+function Par(i0,bar){return function(fs){var b=i0(fs),p=.3*fs,e=.06*fs,A=b.a+e,D=b.d+e,w=b.w+2*p+.08*fs;return{w:w,a:A,d:D,dr:function(x,y){var t=y-A,u=y+D,m=(t+u)/2,l=x+p*.9,r=x+w-p*.9,o=bar?'M'+l+' '+t+'V'+u+'M'+r+' '+t+'V'+u:'M'+l+' '+t+'Q'+(x-p*.2)+' '+m+' '+l+' '+u+'M'+r+' '+t+'Q'+(x+w+p*.2)+' '+m+' '+r+' '+u;return '<path d="'+o+'" fill="none" stroke="currentColor" stroke-width="'+.06*fs+'" stroke-linecap="round"/>'+b.dr(x+p+.04*fs,y)}}}}
+function Rad(i0){return function(fs){var b=i0(fs),k=.7*fs,A=b.a+.2*fs;return{w:b.w+k+.1*fs,a:A,d:b.d,dr:function(x,y){var t=y-A,u=y+b.d;return '<path fill="none" stroke="currentColor" stroke-width="'+.06*fs+'" stroke-linejoin="round" d="M'+x+' '+(y-.25*fs)+'L'+(x+.15*fs)+' '+(y-.3*fs)+'L'+(x+.35*fs)+' '+u+'L'+(x+k*.85)+' '+t+'H'+(x+k+b.w+.08*fs)+'"/>'+b.dr(x+k,y)}}}}
+function parse(src){
+  var s=src.trim();if(!s)return{tex:'',n:null};if(s.indexOf('\\')>-1)return{tex:s,n:null};
+  var re=/\s*(?:(\d+(?:\.\d+)?)|([A-Za-z]+)(\d*)|(<=|>=|!=|[-+*\/^_()=<>]))/y,tk=[],pos=0,m;
+  while(pos<s.length){re.lastIndex=pos;m=re.exec(s);if(!m)throw new Error('Carácter no reconocido: ’'+s.slice(pos).trim().charAt(0)+'’');
+    tk.push(m[1]!==undefined?{k:'n',v:m[1]}:m[2]!==undefined?{k:'i',v:m[2],d:m[3]}:{k:'o',v:m[4]});pos=re.lastIndex}
+  var i=0;function R(t,n,it,inn){return{tex:t,n:n,it:it,inn:inn}}
+  function st(o){return o.it!==undefined?o.it:o.tex}function sn(o){return o.inn||o.n}
+  function is(v){return tk[i]&&tk[i].k==='o'&&tk[i].v===v}
+  function expr(){var o=term(),t=o.tex,n=[o.n];while(is('+')||is('-')){var op=tk[i++].v,r=term();t+=' '+op+' '+r.tex;n.push(Sp(.25),Txt(op==='-'?'−':'+'),Sp(.25),r.n)}return R(t,Row(n))}
+  function starts(){var t=tk[i];return t&&(t.k==='n'||t.k==='i'||(t.k==='o'&&t.v==='('))}
+  function term(){var l=unary(),r;for(;;){
+    if(is('/')){i++;r=unary();l=R('\\frac{'+st(l)+'}{'+st(r)+'}',Frac(sn(l),sn(r)))}
+    else if(is('*')){i++;r=unary();l=R(l.tex+' \\cdot '+r.tex,Row([l.n,Sp(.15),Txt('·'),Sp(.15),r.n]))}
+    else if(starts()){r=unary();l=R(l.tex+' '+r.tex,Row([l.n,Sp(.08),r.n]))}else break}return l}
+  function unary(){if(is('-')){i++;var u=unary();return R('-'+u.tex,Row([Txt('−'),u.n]))}if(is('+')){i++;return unary()}return power()}
+  function power(){var b=atom();if(is('^')){i++;var e=unary();b=R(b.tex+'^{'+st(e)+'}',Sup(b.n,sn(e)))}return b}
+  function atom(){var t=tk[i++],a;if(!t)throw new Error('La fórmula está incompleta');
+    if(t.k==='n')return R(t.v,Txt(t.v));
+    if(t.k==='o'){if(t.v==='('){var e=expr();if(is(')'))i++;return R('\\left('+e.tex+'\\right)',Par(e.n),e.tex,e.n)}throw new Error('Símbolo inesperado: ’'+t.v+'’')}
+    var nm=t.v;if(nm==='sqrt'){a=atom();return R('\\sqrt{'+st(a)+'}',Rad(sn(a)))}
+    if(nm==='abs'){a=atom();return R('\\left|'+st(a)+'\\right|',Par(sn(a),1))}
+    if(FUNCS[nm]){a=atom();return R('\\'+nm+'\\,'+a.tex,Row([Txt(nm),Sp(.12),a.n]))}
+    var g=GK[nm],bt=g?'\\'+nm:(nm.length>1?'\\mathit{'+nm+'}':nm),bn=Txt(g||nm,!g||nm===nm.toLowerCase()),sx=t.d,sd=t.d?Txt(t.d):null;
+    if(!sx&&is('_')){i++;var q=tk[i++];if(!q)throw new Error('Falta el subíndice después de _');
+      if(q.k==='o'&&q.v==='('){var w=expr();if(is(')'))i++;sx=w.tex;sd=w.n}else{sx=q.v+(q.d||'');sd=Txt(sx)}}
+    return sx?R(bt+'_{'+sx+'}',Sub(bn,sd)):R(bt,bn)}
+  var res=expr(),t=res.tex,n=[res.n];
+  while(tk[i]&&tk[i].k==='o'&&REL[tk[i].v]){var rl=REL[tk[i++].v],nx=expr();t+=' '+rl[0]+' '+nx.tex;n.push(Sp(.3),Txt(rl[1]),Sp(.3),nx.n)}
+  if(i<tk.length)throw new Error('Hay un paréntesis o símbolo de más');return{tex:t,n:Row(n)}}
+function svg(n,fs){var b=n(fs),p=fs*.4,W=Math.ceil(b.w+2*p),H=Math.ceil(b.a+b.d+2*p);return '<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" fill="currentColor" style="font-family:'+FF+'">'+b.dr(p,p+b.a)+'</svg>'}
+function fx(s,fs){try{var r=parse(s);return{tex:r.tex,html:r.n?svg(r.n,fs):'<code>'+X(r.tex)+'</code>'}}catch(e){return{tex:'% error: '+e.message,html:'<i>['+X(e.message)+']</i>',err:e.message}}}
+
+/* ===== Estado y guardado ===== */
+var F=['tipo','estilo','tema','titulo','corto','autores','univ','facu','curso','doc','fecha','resumen','claves'];
+var S={secs:[{t:'Introducción',x:''},{t:'Desarrollo',x:''},{t:'Conclusiones',x:''}],refs:[]},IM={},lastTa=null;
+function save(){try{var o={secs:S.secs,refs:S.refs,f:{}};F.forEach(function(k){o.f[k]=$(k).value});localStorage.setItem('paperAPA7',JSON.stringify(o))}catch(e){}}
+try{var o=JSON.parse(localStorage.getItem('paperAPA7')||'null');if(o){S.secs=o.secs||S.secs;S.refs=o.refs||[];F.forEach(function(k){if(o.f&&o.f[k]!==undefined)$(k).value=o.f[k]})}}catch(e){}
+F.forEach(function(k){$(k).addEventListener('input',function(){save();refresh()})});
+
+/* ===== Pestañas ===== */
+var TB=[['datos','Datos'],['texto','Texto'],['fuentes','Fuentes'],['vista','Vista'],['export','Exportar']];
+TB.forEach(function(t){var b=document.createElement('button');b.textContent=t[1];b.dataset.t=t[0];b.onclick=function(){go(t[0])};$('tabs').appendChild(b)});
+function go(n){TB.forEach(function(t){$('s-'+t[0]).hidden=t[0]!==n});[].forEach.call($('tabs').children,function(b){b.className=b.dataset.t===n?'on':''});refresh()}
+
+/* ===== Secciones ===== */
+function drawSecs(){var h=$('secs');h.replaceChildren();S.secs.forEach(function(s,i){
+  var d=document.createElement('div');d.style.marginBottom='14px';
+  var t=document.createElement('input');t.value=s.t;t.placeholder='Título de la sección';t.oninput=function(){s.t=t.value;save()};
+  var a=document.createElement('textarea');a.value=s.x;a.oninput=function(){s.x=a.value;save()};a.onfocus=function(){lastTa=a};
+  var x=document.createElement('button');x.textContent='Quitar sección';x.style.marginTop='6px';x.onclick=function(){if(confirm('¿Quitar esta sección?')){S.secs.splice(i,1);save();drawSecs()}};
+  d.append(t,a,x);h.appendChild(d)})}
+$('addSec').onclick=function(){S.secs.push({t:'',x:''});save();drawSecs()};
+function ins(txt,block){var a=lastTa;if(!a){alert('Toca primero dentro del texto de una sección.');return}
+  var p=a.selectionStart||a.value.length,pre=a.value.slice(0,p),post=a.value.slice(p);
+  if(block)txt='\n\n'+txt+'\n\n';a.value=pre+txt+post;a.dispatchEvent(new Event('input'));a.focus();a.selectionStart=a.selectionEnd=p+txt.length}
+
+/* ===== Fórmula e imágenes ===== */
+function fxv(){var r=fx($('fx').value,26);$('fxv').innerHTML=r.html;$('fxe').textContent=r.err||''}
+$('fx').oninput=fxv;$('fxi').onclick=function(){if($('fx').value.trim())ins('[['+$('fx').value.trim()+']]',1)};
+$('imgs').onchange=function(){[].forEach.call(this.files,function(f){var n=f.name.replace(/[^\w.\-]+/g,'_');IM[n]={f:f,u:URL.createObjectURL(f)}});drawImgs()};
+function drawImgs(){var ns=Object.keys(IM);$('imgl').innerHTML=ns.map(function(n){return '<div class="it">'+X(n)+'</div>'}).join('');
+  $('imsel').innerHTML=ns.map(function(n){return '<option>'+X(n)+'</option>'}).join('')}
+$('imi').onclick=function(){var n=$('imsel').value;if(!n){alert('Primero elige una imagen.');return}ins('[img:'+n+'|'+$('cap').value.trim()+($('imside').value?'|'+$('imside').value:'')+']',1)};
+
+/* ===== Referencias ===== */
+function lines(s){return s.split('\n').map(function(x){return x.trim()}).filter(Boolean)}
+function names(s){return lines(s).map(function(l){var p=l.split(',');return{ap:p[0].trim(),no:(p[1]||'').trim()}})}
+function ini(no){return no.split(/\s+/).filter(Boolean).map(function(w){return w[0].toUpperCase()+'.'}).join(' ')}
+function CH(){return $('estilo').value==='chicago'}
+function apaAu(l){var a=l.map(function(p,i){return CH()?(i?(p.no?p.no+' ':'')+p.ap:p.ap+(p.no?', '+p.no:'')):p.ap+(p.no?', '+ini(p.no):'')});return a.length<3?a.join(' y '):a.slice(0,-1).join(', ')+' y '+a[a.length-1]}
+function asc(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'')}
+function mkKey(a,y){var b=asc((names(a)[0]||{ap:'anon'}).ap)+(y||'sf'),k=b,c=0;while(S.refs.some(function(r){return r.k===k}))k=b+String.fromCharCode(97+c++);return k}
+function bibE(v){var br=function(s){return '{'+s.replace(/[&%$#_]/g,'\\$&')+'}'},t={libro:'book',articulo:'article',capitulo:'incollection',web:'online'}[v.tipo],o=[];
+  var au=names(v.a).map(function(p){return p.ap+(p.no?', '+p.no:'')}).join(' and ');
+  if(au)o.push('author='+br(au));if(v.y)o.push('year='+br(v.y));o.push('title='+br(v.t));
+  if(v.tipo==='articulo'){o.push('journaltitle='+br(v.j));if(v.v)o.push('volume='+br(v.v));if(v.n)o.push('number='+br(v.n));if(v.p)o.push('pages='+br(v.p.replace(/\s*[-–]\s*/,'--')))}
+  if(v.tipo==='capitulo'){o.push('booktitle='+br(v.j));if(v.e)o.push('editor='+br(names(v.e).map(function(p){return p.ap+(p.no?', '+p.no:'')}).join(' and ')));if(v.p)o.push('pages='+br(v.p.replace(/\s*[-–]\s*/,'--')))}
+  if(v.tipo==='web'&&v.j)o.push('organization='+br(v.j));
+  if((v.tipo==='libro'||v.tipo==='capitulo')&&v.b)o.push('publisher='+br(v.b));
+  if(v.u)o.push(/^10\./.test(v.u)?'doi='+br(v.u):'url='+br(v.u));
+  return '@'+t+'{'+v.k+',\n  '+o.join(',\n  ')+'\n}'}
+function bib(){return S.refs.map(bibE).join('\n\n')+'\n'}
+function refHtml(v){var c=CH(),a=apaAu(names(v.a)),dd=v.u?' '+X(/^10\./.test(v.u)?'https://doi.org/'+v.u:v.u):'',t=X(v.t),y=v.y||'s. f.',H=c?X(a)+'. '+y+'. ':X(a)+' ('+y+'). ';
+  if(v.tipo==='libro')return H+'<i>'+t+'</i>. '+X(v.b||'')+'.'+dd;
+  var tt=c?'“'+t+'.” ':t+'. ';
+  if(v.tipo==='articulo')return H+tt+'<i>'+X(v.j||'')+'</i>'+(v.v?(c?' '+X(v.v):', <i>'+X(v.v)+'</i>'):'')+(v.n?(c?' (':'(')+X(v.n)+')':'')+(v.p?(c?': ':', ')+X(v.p):'')+'.'+dd;
+  if(v.tipo==='capitulo')return H+tt+'En '+(c?'':X(apaAu(names(v.e||'')))+' (Eds.), ')+'<i>'+X(v.j||'')+'</i>'+(c&&v.e?', editado por '+X(apaAu(names(v.e))):'')+(v.p?(c?', ':' (pp. ')+X(v.p)+(c?'':')'):'')+'. '+X(v.b||'')+'.'+dd;
+  return H+(c?tt:'<i>'+t+'</i>. ')+X(v.j||'')+'.'+dd}
+function citeTxt(k,nar){var v=S.refs.filter(function(r){return r.k===k})[0];if(!v)return '(¿'+X(k)+'?)';var n=names(v.a),y=v.y||'s. f.',q=n.length?(n.length===1?n[0].ap:n.length===2?n[0].ap+' y '+n[1].ap:n[0].ap+' et al.'):X(v.t);return nar?X(q)+' ('+y+')':'('+X(q)+(CH()?' ':', ')+y+')'}
+function cvis(){document.querySelectorAll('[data-c]').forEach(function(d){d.hidden=d.dataset.c.split(' ').indexOf($('rt').value)<0});$('rjl').textContent={articulo:'Revista',capitulo:'Título del libro',web:'Sitio web'}[$('rt').value]||'Revista'}
+$('rt').onchange=cvis;
+$('radd').onclick=function(){if(!$('rtt').value.trim()||!$('ra').value.trim()){alert('Escribe al menos autor y título.');return}
+  var v={tipo:$('rt').value,a:$('ra').value,y:$('ry').value.trim(),t:$('rtt').value.trim(),j:$('rj').value.trim(),v:$('rv').value.trim(),n:$('rn').value.trim(),p:$('rp').value.trim(),e:$('re').value,b:$('rb').value.trim(),u:$('ru').value.trim()};
+  v.k=mkKey(v.a,v.y);S.refs.push(v);S.refs.sort(function(a,b){return asc(a.a).localeCompare(asc(b.a))});save();['ra','ry','rtt','rj','rv','rn','rp','re','rb','ru'].forEach(function(i){$(i).value=''});drawRefs()};
+function drawRefs(){var h=$('rl');h.replaceChildren();S.refs.forEach(function(v,i){var d=document.createElement('div');d.className='box';
+  d.innerHTML='<div>'+refHtml(v)+'</div><p class="mu">Clave: '+X(v.k)+'</p>';
+  var c=document.createElement('button');c.textContent='Citar en el texto';c.onclick=function(){ins('[@'+v.k+']')};
+  var x=document.createElement('button');x.textContent='Quitar';x.style.marginLeft='6px';x.onclick=function(){S.refs.splice(i,1);save();drawRefs()};
+  var r=document.createElement('div');r.className='r';r.append(c,x);d.appendChild(r);h.appendChild(d)})}
+
+/* ===== Texto -> bloques -> LaTeX / vista ===== */
+var TM={'\\':'\\textbackslash{}','&':'\\&','%':'\\%','$':'\\$','#':'\\#','_':'\\_','{':'\\{','}':'\\}','~':'\\textasciitilde{}','^':'\\textasciicircum{}'};
+function te(s){return s.replace(/[\\&%$#_{}~^]/g,function(c){return TM[c]})}
+function inl(s,tex){return s.split(/(\[@@?[\w:.\-]+\]|\{\{[^}]+\}\})/).map(function(p,i){
+  if(i%2===0)return tex?te(p).replace(/\*([^*]+)\*/g,'\\emph{$1}'):X(p).replace(/\*([^*]+)\*/g,'<i>$1</i>');
+  if(p[0]==='['){var n=p[2]==='@',k=p.slice(n?3:2,-1);return tex?(n?'\\textcite{':'\\parencite{')+k+'}':citeTxt(k,n)}
+  var r=fx(p.slice(2,-2),17);return tex?'$'+r.tex+'$':r.html}).join('')}
+function blocks(t){return t.split(/\n\s*\n/).map(function(b){return b.trim()}).filter(Boolean).map(function(b){var m;
+  if(m=b.match(/^\[\[([\s\S]+)\]\]$/))return{k:'eq',v:m[1]};
+  if(m=b.match(/^\[img:([^|\]]+)\|?([^|\]]*)\|?([^\]]*)\]$/))return{k:'im',n:m[1].trim(),c:m[2].trim(),s:m[3].trim().toLowerCase()};
+  if(m=b.match(/^!!(definicion|definición|ejemplo|importante|nota)\s*:\s*([\s\S]+)$/i))return{k:'bx',t:m[1].toLowerCase(),v:m[2].replace(/\n/g,' ')};
+  if(m=b.match(/^(#{2,3})\s+(.+)$/))return{k:'h'+m[1].length,v:m[2]};
+  if(b.split('\n').every(function(l){return /^[-•]\s+/.test(l.trim())}))return{k:'ul',v:b.split('\n').map(function(l){return l.trim().replace(/^[-•]\s+/,'')})};
+  return{k:'p',v:b.replace(/\n/g,' ')}})}
+var BX={definicion:['Definición','blue'],'definición':['Definición','blue'],ejemplo:['Ejemplo','green'],importante:['Importante','red'],nota:['Nota','orange']};
+function secTex(b){var T=$('tipo').value,bm=T==='beamer';
+  if(b.k==='eq'){var r=fx(b.v,10);return '\\begin{equation}\n'+r.tex+'\n\\end{equation}'}
+  if(b.k==='im'){var cp=te(b.c||'Figura'),side=b.s==='izq'||b.s==='der';
+    if(T==='didactico'&&side)return '\\begin{wrapfigure}{'+(b.s==='izq'?'l':'r')+'}{0.4\\textwidth}\n\\centering\n\\includegraphics[width=\\linewidth]{'+b.n+'}\n\\caption{'+cp+'}\n\\end{wrapfigure}';
+    return '\\begin{figure}'+(bm?'':'[ht]')+'\n'+(bm?'':'\\caption{'+cp+'}\n')+'\\centering\n\\includegraphics[width='+(bm?'.6':'.8')+'\\linewidth,height='+(bm?'.6':'.4')+'\\textheight,keepaspectratio]{'+b.n+'}\n'+(bm?'\\caption{'+cp+'}\n':'')+'\\end{figure}'}
+  if(b.k==='bx'){var d=BX[b.t],en=d[1]==='red'?'alertblock':d[1]==='green'?'exampleblock':'block';
+    if(bm)return '\\begin{'+en+'}{'+d[0]+'}\n'+inl(b.v,1)+'\n\\end{'+en+'}';
+    return '\\begin{tcolorbox}[colback='+d[1]+'!5,colframe='+d[1]+'!60!black,title='+d[0]+']\n'+inl(b.v,1)+'\n\\end{tcolorbox}'}
+  if(b.k==='ul')return '\\begin{itemize}\n'+b.v.map(function(x){return '\\item '+inl(x,1)}).join('\n')+'\n\\end{itemize}';
+  if(b.k==='h2')return bm?'\\textbf{'+te(b.v)+'}':'\\subsection{'+te(b.v)+'}';
+  if(b.k==='h3')return bm?'\\textit{'+te(b.v)+'}':'\\subsubsection{'+te(b.v)+'}';
+  return inl(b.v,1)}
+var MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function fecha(){var v=$('fecha').value;if(!v)return '';var p=v.split('-');return +p[2]+' de '+MES[+p[1]-1]+' de '+p[0]}
+function bibPre(){return CH()?['\\usepackage[authordate,backend=biber]{biblatex-chicago}','\\addbibresource{referencias.bib}']:['\\usepackage[style=apa,backend=biber,sortcites=true,sorting=nyt]{biblatex}','\\DeclareLanguageMapping{spanish}{spanish-apa}','\\addbibresource{referencias.bib}']}
+function autoresTx(){var au=lines($('autores').value).map(te);return au.length<3?au.join(' y '):au.slice(0,-1).join(', ')+' y '+au[au.length-1]}
+function tex(){var T=$('tipo').value,c=CH(),h=[],ti=te($('titulo').value),af=te($('univ').value)+(($('facu').value)?', '+te($('facu').value):''),bs=bibPre(),
+  ab=$('resumen').value.trim()?inl($('resumen').value.trim().replace(/\n+/g,' '),1):'',base=['\\usepackage[spanish]{babel}','\\usepackage[utf8]{inputenc}','\\usepackage[T1]{fontenc}','\\usepackage{graphicx}','\\usepackage{amsmath}','\\usepackage{csquotes}'];
+  if(T==='paper'&&!c){h=['\\documentclass[stu,12pt,letterpaper]{apa7}'].concat(base,bs,['','\\title{'+ti+'}','\\shorttitle{'+te($('corto').value||$('titulo').value)+'}','\\author{'+autoresTx()+'}','\\affiliation{'+af+'}','\\course{'+te($('curso').value)+'}','\\professor{'+te($('doc').value)+'}','\\duedate{'+te(fecha())+'}']);
+    if(ab)h.push('\\abstract{'+ab+'}');if($('claves').value.trim())h.push('\\keywords{'+te($('claves').value.trim())+'}');h.push('','\\begin{document}','\\maketitle','')}
+  else if(T==='beamer'){h=['\\documentclass[aspectratio=169,11pt]{beamer}','\\usetheme{'+$('tema').value+'}','\\setbeamertemplate{navigation symbols}{}'].concat(base,bs,['','\\title{'+ti+'}','\\author{'+autoresTx()+'}','\\institute{'+af+'}','\\date{'+te(fecha())+'}','','\\begin{document}','\\begin{frame}','\\titlepage','\\end{frame}',''])}
+  else{h=['\\documentclass[12pt,letterpaper]{article}','\\usepackage[margin=2.5cm]{geometry}'].concat(base);
+    if(T==='paper')h.push('\\usepackage{setspace}','\\usepackage{mathptmx}','\\doublespacing');
+    else h.push('\\usepackage{xcolor}','\\usepackage{wrapfig}','\\usepackage[most]{tcolorbox}','\\usepackage{titlesec}','\\titleformat{\\section}{\\Large\\bfseries\\color{blue!50!black}}{\\thesection}{0.6em}{}','\\titleformat{\\subsection}{\\large\\bfseries\\color{blue!40!black}}{\\thesubsection}{0.6em}{}');
+    h=h.concat(bs,['','\\title{'+ti+'}','\\author{'+autoresTx()+'\\\\ '+af+'\\\\ '+te($('curso').value)+(($('doc').value)?'\\\\ '+te($('doc').value):'')+'}','\\date{'+te(fecha())+'}','','\\begin{document}','\\maketitle','']);
+    if(ab)h.push('\\begin{abstract}',ab,'\\end{abstract}','')}
+  S.secs.forEach(function(s){if(!s.t.trim()&&!s.x.trim())return;
+    h.push(T==='beamer'?'\\begin{frame}{'+te(s.t)+'}':'\\section{'+te(s.t)+'}','');blocks(s.x).forEach(function(b){h.push(secTex(b),'')});if(T==='beamer')h.push('\\end{frame}','')});
+  if(S.refs.length){if(T==='beamer')h.push('\\begin{frame}[allowframebreaks]{Referencias}','\\printbibliography[heading=none]','\\end{frame}','');else h.push('\\printbibliography','')}
+  h.push('\\end{document}');return h.join('\n')}
+function vista(){var T=$('tipo').value,o='';
+  var tp='<p class="c"><b>'+X($('titulo').value||'Título del trabajo')+'</b></p><p class="c">'+X(lines($('autores').value).join(', '))+'</p><p class="c">'+X($('univ').value)+(($('facu').value)?', '+X($('facu').value):'')+'</p><p class="c">'+X($('curso').value)+'</p><p class="c">'+X($('doc').value)+'</p><p class="c">'+X(fecha())+'</p>';
+  o+=T==='beamer'?'<div class="sl"><div class="sb">'+tp+'</div></div>':tp;
+  if(T!=='beamer'&&$('resumen').value.trim())o+='<h2>Resumen</h2><p>'+inl($('resumen').value.trim(),0)+'</p>'+($('claves').value.trim()?'<p><i>Palabras clave:</i> '+X($('claves').value)+'</p>':'');
+  var fi=0;S.secs.forEach(function(s){var q='';blocks(s.x).forEach(function(b){
+    if(b.k==='eq'){var r=fx(b.v,24);q+='<div class="eq">'+r.html+'</div>'}
+    else if(b.k==='im'){fi++;var m=IM[b.n],cl=T==='didactico'&&(b.s==='izq'||b.s==='der')?'fl'+(b.s==='izq'?' l':''):'';q+='<figure class="'+cl+'"><figcaption style="text-align:left"><b>Figura '+fi+'</b> <i>'+X(b.c)+'</i></figcaption>'+(m?'<img src="'+m.u+'">':'<i>[imagen "'+X(b.n)+'" no cargada]</i>')+'</figure>'}
+    else if(b.k==='bx'){var d=BX[b.t];q+='<div class="bx"><b>'+d[0]+'</b><div>'+inl(b.v,0)+'</div></div>'}
+    else if(b.k==='ul')q+='<ul>'+b.v.map(function(x){return '<li>'+inl(x,0)+'</li>'}).join('')+'</ul>';
+    else if(b.k==='h2')q+='<h3>'+X(b.v)+'</h3>';else if(b.k==='h3')q+='<h4>'+X(b.v)+'</h4>';else q+='<p>'+inl(b.v,0)+'</p>'});
+    if(T==='beamer')o+='<div class="sl"><h2>'+X(s.t)+'</h2><div class="sb">'+q+'</div></div>';else o+=(s.t.trim()?'<h2>'+X(s.t)+'</h2>':'')+q});
+  if(S.refs.length){var rr=S.refs.map(function(v){return '<p class="ref">'+refHtml(v)+'</p>'}).join('');o+=T==='beamer'?'<div class="sl"><h2>Referencias</h2><div class="sb">'+rr+'</div></div>':'<h2>'+(CH()?'Bibliografía':'Referencias')+'</h2>'+rr}
+  return o}
+function refresh(){if(!$('s-vista').hidden)$('pv').innerHTML=vista();if(!$('s-export').hidden){$('tx').textContent=tex();$('bb').textContent=bib()}}
+
+/* ===== Exportar ===== */
+function crc(b){var t=crc.t;if(!t){t=crc.t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}}var c=-1;for(var i=0;i<b.length;i++)c=t[(c^b[i])&255]^(c>>>8);return(c^-1)>>>0}
+function zip(fs){var pa=[],cd=[],off=0,en=new TextEncoder();fs.forEach(function(f){var nb=en.encode(f.n),c=crc(f.d),L=f.d.length,h=new DataView(new ArrayBuffer(30));
+  h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x800,true);h.setUint16(12,0x21,true);h.setUint32(14,c,true);h.setUint32(18,L,true);h.setUint32(22,L,true);h.setUint16(26,nb.length,true);pa.push(h.buffer,nb,f.d);
+  var g=new DataView(new ArrayBuffer(46));g.setUint32(0,0x02014b50,true);g.setUint16(4,20,true);g.setUint16(6,20,true);g.setUint16(8,0x800,true);g.setUint16(14,0x21,true);g.setUint32(16,c,true);g.setUint32(20,L,true);g.setUint32(24,L,true);g.setUint16(28,nb.length,true);g.setUint32(42,off,true);cd.push(g.buffer,nb);off+=30+nb.length+L});
+  var cs=0;cd.forEach(function(x){cs+=x.byteLength});var e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,fs.length,true);e.setUint16(10,fs.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+  return new Blob(pa.concat(cd,[e.buffer]),{type:'application/zip'})}
+$('zipb').onclick=async function(){var en=new TextEncoder(),fs=[{n:'main.tex',d:en.encode(tex())},{n:'referencias.bib',d:en.encode(bib())}];
+  for(var n in IM)fs.push({n:n,d:new Uint8Array(await IM[n].f.arrayBuffer())});
+  var a=document.createElement('a');a.href=URL.createObjectURL(zip(fs));a.download='documento-latex.zip';document.body.appendChild(a);a.click();a.remove();
+  $('xm').textContent='Se creó documento-latex.zip. Si no se descargó, usa "Copiar .tex" y "Copiar .bib".'};
+function cop(id,fn){$(id).onclick=function(){var t=fn(),b=this,o=b.textContent;try{navigator.clipboard.writeText(t).then(function(){b.textContent='Copiado';setTimeout(function(){b.textContent=o},1300)},function(){b.textContent='No se pudo copiar'})}catch(e){b.textContent='No se pudo copiar'}}}
+cop('cpt',tex);cop('cpb',bib);
+
+function tmv(){$('tmw').hidden=$('tipo').value!=='beamer'}
+$('tipo').addEventListener('change',function(){tmv();refresh()});$('estilo').addEventListener('change',drawRefs);
+drawSecs();drawRefs();drawImgs();cvis();fxv();tmv();go('datos');
+</script></body></html>
